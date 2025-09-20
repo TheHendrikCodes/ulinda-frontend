@@ -1,8 +1,8 @@
 export const API_CONFIG = {
-  BASE_URL: '',
+  BASE_URL: '/api/',
   ENDPOINTS: {
-    LOGIN: '/api/auth/login',
-    MODELS: '/api/v1/models',
+    LOGIN: '/auth/login',
+    MODELS: '/v1/models',
     MODEL_BY_ID: (modelId: string) => `/api/v1/models/${modelId}`,
     // Add other endpoints here as needed
   },
