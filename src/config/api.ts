@@ -1,11 +1,11 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080',
+  BASE_URL: '',
   ENDPOINTS: {
-    LOGIN: '/auth/login',
-    MODELS: '/v1/models',
-    MODEL_BY_ID: (modelId: string) => `/v1/models/${modelId}`,
+    LOGIN: '/api/auth/login',
+    MODELS: '/api/v1/models',
+    MODEL_BY_ID: (modelId: string) => `/api/v1/models/${modelId}`,
     // Add other endpoints here as needed
-  }
+  },
 }
 
 export const getApiUrl = (endpoint: string): string => {
@@ -16,10 +16,10 @@ export const getAuthHeaders = (token?: string): HeadersInit => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   }
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
-  
+
   return headers
 }
