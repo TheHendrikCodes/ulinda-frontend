@@ -11,15 +11,14 @@
         </button>
       </div>
 
-      <div class="nav-item dropdown">
+      <div class="nav-item dropdown" @mouseenter="showAccount" @mouseleave="hideAccount">
         <button
           class="nav-button"
           :class="{ active: isAccountPage }"
-          @click="toggleAccountMenu"
         >
           Account
         </button>
-        <div v-if="showAccountMenu" class="dropdown-menu">
+        <div v-if="showAccountMenu" class="dropdown-menu" @mouseenter="showAccount" @mouseleave="hideAccount">
           <router-link
             to="/account/change-password"
             class="dropdown-item"
@@ -30,38 +29,37 @@
         </div>
       </div>
 
-      <div class="nav-item dropdown">
-        <button 
-          class="nav-button" 
+      <div class="nav-item dropdown" @mouseenter="showAdmin" @mouseleave="hideAdmin">
+        <button
+          class="nav-button"
           :class="{ active: isAdminPage }"
-          @click="toggleAdminMenu"
         >
           Admin
         </button>
-        <div v-if="showAdminMenu" class="dropdown-menu">
-          <router-link 
-            to="/admin/users" 
+        <div v-if="showAdminMenu" class="dropdown-menu" @mouseenter="showAdmin" @mouseleave="hideAdmin">
+          <router-link
+            to="/admin/users"
             class="dropdown-item"
             :class="{ active: currentPage === 'admin/users' }"
           >
             User Administration
           </router-link>
-          <router-link 
-            to="/admin/models" 
+          <router-link
+            to="/admin/models"
             class="dropdown-item"
             :class="{ active: currentPage === 'admin/models' }"
           >
             Model Administration
           </router-link>
-          <router-link 
-            to="/admin/logs" 
+          <router-link
+            to="/admin/logs"
             class="dropdown-item"
             :class="{ active: currentPage === 'admin/logs' }"
           >
             System Logs
           </router-link>
-          <router-link 
-            to="/admin/performance" 
+          <router-link
+            to="/admin/performance"
             class="dropdown-item"
             :class="{ active: currentPage === 'admin/performance' }"
           >
@@ -114,12 +112,22 @@ const navigateToModels = () => {
   router.push('/models')
 }
 
-const toggleAdminMenu = () => {
-  showAdminMenu.value = !showAdminMenu.value
+const showAdmin = () => {
+  showAdminMenu.value = true
+  showAccountMenu.value = false // Close account menu
 }
 
-const toggleAccountMenu = () => {
-  showAccountMenu.value = !showAccountMenu.value
+const hideAdmin = () => {
+  showAdminMenu.value = false
+}
+
+const showAccount = () => {
+  showAccountMenu.value = true
+  showAdminMenu.value = false // Close admin menu
+}
+
+const hideAccount = () => {
+  showAccountMenu.value = false
 }
 
 const handleLogout = () => {
@@ -171,8 +179,9 @@ const handleLogout = () => {
   transition: background-color 0.2s;
 }
 
-.nav-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.nav-button:hover,
+.dropdown:hover .nav-button {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .nav-button.active {
@@ -197,11 +206,24 @@ const handleLogout = () => {
   left: 0;
   background-color: white;
   min-width: 200px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 2000;
   margin-top: 0.5rem;
+  border: 1px solid #e0e0e0;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-item {
