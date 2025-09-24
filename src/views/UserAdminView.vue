@@ -229,7 +229,7 @@
               <p>{{ editUserError }}</p>
             </div>
 
-            <form @submit.prevent class="edit-user-form">
+            <form @submit.prevent="saveUser" class="edit-user-form">
               <div class="form-group">
                 <label for="editUserName" class="form-label">
                   Name
@@ -366,8 +366,7 @@
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  @click="saveUser"
+                  type="submit"
                   class="save-edit-btn"
                   :disabled="!editUserData.username || editingUser"
                 >
