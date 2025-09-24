@@ -24,7 +24,7 @@
         </div>
 
         <!-- Users Table Container -->
-        <div v-if="!showAddUser && !showEditUser && !showPasswordDisplay" class="users-container">
+        <div v-if="!showAddUser && !showEditUser && !showPasswordDisplay && !showResetPasswordDisplay" class="users-container">
           <div v-if="users.length === 0" class="no-users">
             <p>No users found.</p>
           </div>
@@ -222,6 +222,49 @@
           </div>
         </div>
 
+        <!-- Reset Password Display Container -->
+        <div v-if="showResetPasswordDisplay" class="password-display-container">
+          <div class="password-display-content">
+            <div class="password-display-header">
+              <h3>Password Reset Successfully!</h3>
+            </div>
+
+            <div class="password-display-body">
+              <div class="success-message">
+                <p>The password has been reset for the user. Please provide the new credentials securely.</p>
+              </div>
+
+              <div class="credentials-section">
+                <div class="credentials-box">
+                  <div class="credential-row">
+                    <label class="credential-label">Username:</label>
+                    <span class="credential-value">{{ resetUserPassword?.username }}</span>
+                  </div>
+                  <div class="credential-row">
+                    <label class="credential-label">New Password:</label>
+                    <span class="credential-value password-value">{{ resetUserPassword?.newPassword }}</span>
+                  </div>
+                </div>
+
+                <div class="password-warning">
+                  <strong>Important:</strong> This new password will not be shown again.
+                  Please ensure the user receives these credentials securely.
+                </div>
+              </div>
+            </div>
+
+            <div class="password-display-actions">
+              <button
+                type="button"
+                @click="closeResetPasswordDisplay"
+                class="password-ok-btn"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Edit User Container -->
         <div v-if="showEditUser" class="edit-user-container">
           <div class="edit-user-content">
@@ -398,7 +441,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders } from '@/config/api'
-import type { UserDto, GetUsersResponse, CreateUserRequest, CreateUserResponse, UserModelPermissionDto, GetUserModelPermissionsResponse, ModelPermission, ModelDto, ModelsResponse, UpdateUserRequest, UpdateUserModelPermissionDto } from '@/types/models'
+import type { UserDto, GetUsersResponse, CreateUserRequest, CreateUserResponse, UserModelPermissionDto, GetUserModelPermissionsResponse, ModelPermission, ModelDto, ModelsResponse, UpdateUserRequest, UpdateUserModelPermissionDto, UserResetPasswordResponse } from '@/types/models'
 import AppNavigation from '@/components/AppNavigation.vue'
 import PageHeader from '@/components/PageHeader.vue'
 
@@ -438,6 +481,8 @@ const loadingModels = ref(false)
 const modelsError = ref<string | null>(null)
 const showPasswordDisplay = ref(false)
 const newUserPassword = ref<CreateUserResponse | null>(null)
+const showResetPasswordDisplay = ref(false)
+const resetUserPassword = ref<{ username: string; newPassword: string } | null>(null)
 
 const fetchUsers = async () => {
   loading.value = true
@@ -503,6 +548,11 @@ const cancelAddUser = () => {
 const closePasswordDisplay = () => {
   showPasswordDisplay.value = false
   newUserPassword.value = null
+}
+
+const closeResetPasswordDisplay = () => {
+  showResetPasswordDisplay.value = false
+  resetUserPassword.value = null
 }
 
 const createUser = async () => {
@@ -634,9 +684,43 @@ const cancelEditUser = () => {
   allModels.value = []
 }
 
-const resetPassword = () => {
-  // TODO: Implement password reset functionality
-  console.log('Reset password clicked for user:', userToEdit.value?.userName)
+const resetPassword = async () => {
+  if (!userToEdit.value) {
+    return
+  }
+
+  try {
+    const token = authStore.getAuthToken()
+
+    if (!token) {
+      router.push('/')
+      return
+    }
+
+    const response = await fetch(getApiUrl(`/admin/user/reset-password/${userToEdit.value.userId}`), {
+      method: 'GET',
+      headers: getAuthHeaders(token)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Failed to reset password: ${errorText}`)
+    }
+
+    const responseData: UserResetPasswordResponse = await response.json()
+
+    // Store the password reset response and show password display
+    resetUserPassword.value = {
+      username: userToEdit.value.userName,
+      newPassword: responseData.newPassword
+    }
+    showResetPasswordDisplay.value = true
+
+    console.log('Password reset successful for user:', userToEdit.value.userName)
+  } catch (err) {
+    console.error('Error resetting password:', err)
+    editUserError.value = err instanceof Error ? err.message : 'Failed to reset password'
+  }
 }
 
 const fetchAllModels = async () => {

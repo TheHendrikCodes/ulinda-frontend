@@ -192,6 +192,10 @@ export interface CreateUserResponse {
   password: string
 }
 
+export interface UserResetPasswordResponse {
+  newPassword: string
+}
+
 export enum ModelPermission {
   VIEW_RECORDS = 'VIEW_RECORDS',
   ADD_RECORDS = 'ADD_RECORDS',
