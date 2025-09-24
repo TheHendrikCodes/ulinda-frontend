@@ -58,7 +58,6 @@
                   </td>
                   <td class="action-cell">
                     <button
-                      v-if="user.userName !== 'admin'"
                       @click="editUser(user)"
                       class="action-btn edit-btn"
                     >
@@ -295,7 +294,7 @@
                   type="text"
                   class="form-input"
                   placeholder="Enter first name"
-                  :disabled="editingUser"
+                  :disabled="editingUser || userToEdit?.userName === 'admin'"
                 />
               </div>
 
@@ -309,7 +308,7 @@
                   type="text"
                   class="form-input"
                   placeholder="Enter surname"
-                  :disabled="editingUser"
+                  :disabled="editingUser || userToEdit?.userName === 'admin'"
                 />
               </div>
 
@@ -323,7 +322,7 @@
                   type="text"
                   class="form-input"
                   placeholder="Enter username (letters and numbers only)"
-                  :disabled="editingUser"
+                  :disabled="editingUser || userToEdit?.userName === 'admin'"
                   pattern="^[a-zA-Z0-9]+$"
                   title="Username must contain only letters and numbers, no spaces allowed"
                   required
@@ -337,7 +336,7 @@
                     v-model="editUserData.canCreateModels"
                     type="checkbox"
                     class="form-checkbox"
-                    :disabled="editingUser"
+                    :disabled="editingUser || userToEdit?.userName === 'admin'"
                   />
                   <label for="editCanCreateModels" class="checkbox-label">
                     User Can Create Models
@@ -352,7 +351,7 @@
                     v-model="editUserData.adminUser"
                     type="checkbox"
                     class="form-checkbox"
-                    :disabled="editingUser"
+                    :disabled="editingUser || userToEdit?.userName === 'admin'"
                   />
                   <label for="editAdminUser" class="checkbox-label">
                     Admin User
@@ -367,7 +366,7 @@
                     v-model="editUserData.mustChangePassword"
                     type="checkbox"
                     class="form-checkbox"
-                    :disabled="editingUser"
+                    :disabled="editingUser || userToEdit?.userName === 'admin'"
                   />
                   <label for="editMustChangePassword" class="checkbox-label">
                     Must Change Password
@@ -376,7 +375,7 @@
               </div>
 
               <!-- Model Permissions Section -->
-              <div class="permissions-section">
+              <div v-if="userToEdit?.userName !== 'admin'" class="permissions-section">
                 <h4 class="permissions-title">Model Permissions</h4>
 
                 <div v-if="loadingModels || loadingPermissions" class="loading-permissions">
@@ -438,7 +437,7 @@
                 <button
                   type="submit"
                   class="save-edit-btn"
-                  :disabled="!editUserData.username || editingUser"
+                  :disabled="!editUserData.username || editingUser || userToEdit?.userName === 'admin'"
                 >
                   {{ editingUser ? 'Saving...' : 'Save Changes' }}
                 </button>
