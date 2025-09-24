@@ -41,12 +41,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders } from '@/config/api'
-import type { LoginResponse, ForcedChangePasswordRequest } from '@/types/auth'
+import type { ForcedChangePasswordRequest } from '@/types/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
 
 const oldPassword = ref('')
 const newPassword = ref('')
@@ -105,50 +103,17 @@ const handleForcedChangePassword = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data: LoginResponse = await response.json()
-    console.log('Forced change password response:', data)
-
-    // Store authentication data from successful forced password change
-    const userObj = { id: username.value, username: username.value }
-    const expiresIn = data.expiresIn || 86400000 // Default to 24 hours if 0
-    const tokenExpiry = Date.now() + expiresIn
-
-    console.log('Setting auth store with userObj:', userObj, 'token:', data.token, 'expiresIn:', expiresIn)
-    console.log('Auth store before setting:', {
-      user: authStore.user,
-      token: authStore.token,
-      isAuthenticated: authStore.isAuthenticated
-    })
-
-    // Set authentication data in the store
-    if (authStore.user) {
-      authStore.user.value = userObj
-    }
-    if (authStore.token) {
-      authStore.token.value = data.token
-    }
-    if (authStore.tokenExpiry) {
-      authStore.tokenExpiry.value = tokenExpiry
-    }
-    if (authStore.isAuthenticated) {
-      authStore.isAuthenticated.value = true
-    }
-
-    // Save to localStorage
-    localStorage.setItem('auth_token', data.token)
-    localStorage.setItem('auth_expiry', tokenExpiry.toString())
-    localStorage.setItem('auth_user', JSON.stringify(userObj))
+    // Backend returns void, so no need to parse response
+    success.value = 'Password changed successfully! Please login with your new password.'
 
     // Clear temporary credentials
     sessionStorage.removeItem('temp_username')
     sessionStorage.removeItem('temp_password')
 
-    success.value = 'Password changed successfully! Redirecting...'
-
-    // Redirect to home after success
+    // Redirect to login page after success
     setTimeout(() => {
-      router.push('/home')
-    }, 1500)
+      router.push('/')
+    }, 2000)
 
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to change password'
