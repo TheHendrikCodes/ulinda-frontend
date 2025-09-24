@@ -30,6 +30,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/forced-change-password',
+      name: 'forced-change-password',
+      component: () => import('../views/ForcedChangePasswordView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
       path: '/admin/users',
       name: 'user-admin',
       component: () => import('../views/UserAdminView.vue'),
@@ -106,11 +112,11 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const authStore = useAuthStore()
-  
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return '/'
   }
-  
+
   if (to.name === 'login' && authStore.isAuthenticated) {
     return '/home'
   }

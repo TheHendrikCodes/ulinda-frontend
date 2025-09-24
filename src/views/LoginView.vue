@@ -44,11 +44,16 @@ const error = ref('')
 
 const handleLogin = async () => {
   error.value = ''
-  
+
   const result = await authStore.login(username.value, password.value)
-  
+
   if (result.success) {
     router.push('/home')
+  } else if (result.mustChangePassword) {
+    // Store temporary credentials for the forced change password flow
+    sessionStorage.setItem('temp_username', username.value)
+    sessionStorage.setItem('temp_password', password.value)
+    router.push('/forced-change-password')
   } else {
     error.value = result.error || 'Login failed. Please try again.'
   }

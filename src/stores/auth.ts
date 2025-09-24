@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function login(username: string, password: string): Promise<{ success: boolean; error?: string }> {
+  async function login(username: string, password: string): Promise<{ success: boolean; error?: string; mustChangePassword?: boolean }> {
     try {
       const loginData: LoginRequest = { username, password }
       
@@ -43,6 +43,19 @@ export const useAuthStore = defineStore('auth', () => {
         if (response.status === 401) {
           return { success: false, error: 'Invalid credentials' }
         }
+
+        if (response.status === 500) {
+          const errorData = await response.json()
+          if (errorData.errorCode === 'USER_MUST_CHANGE_PASSWORD') {
+            return {
+              success: false,
+              error: errorData.message || 'You must change your password',
+              mustChangePassword: true
+            }
+          }
+          return { success: false, error: errorData.message || 'Server error occurred' }
+        }
+
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
@@ -51,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Store authentication data
       token.value = data.token
       tokenExpiry.value = Date.now() + data.expiresIn
-      user.value = { id: data.userId, username }
+      user.value = { id: username, username }
       isAuthenticated.value = true
 
       // Save to localStorage
