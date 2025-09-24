@@ -173,10 +173,21 @@ export interface UserDto {
   userId: string
   canCreateModels: boolean
   adminUser: boolean
+  mustChangePassword?: boolean
 }
 
 export interface GetUsersResponse {
   users: UserDto[]
+}
+
+export interface GetUserResponse {
+  userId: string
+  userName: string
+  name: string
+  surname: string
+  adminUser: boolean
+  canCreateModels: boolean
+  mustChangePassword: boolean
 }
 
 export interface CreateUserRequest {
@@ -228,6 +239,7 @@ export interface UpdateUserRequest {
   username: string
   adminUser: boolean
   canCreateModels: boolean
+  mustChangePassword: boolean
   permissions: UpdateUserModelPermissionDto[]
 }
 

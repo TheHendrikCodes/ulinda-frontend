@@ -360,6 +360,21 @@
                 </div>
               </div>
 
+              <div class="form-group">
+                <div class="checkbox-group">
+                  <input
+                    id="editMustChangePassword"
+                    v-model="editUserData.mustChangePassword"
+                    type="checkbox"
+                    class="form-checkbox"
+                    :disabled="editingUser"
+                  />
+                  <label for="editMustChangePassword" class="checkbox-label">
+                    Must Change Password
+                  </label>
+                </div>
+              </div>
+
               <!-- Model Permissions Section -->
               <div class="permissions-section">
                 <h4 class="permissions-title">Model Permissions</h4>
@@ -441,7 +456,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders } from '@/config/api'
-import type { UserDto, GetUsersResponse, CreateUserRequest, CreateUserResponse, UserModelPermissionDto, GetUserModelPermissionsResponse, ModelPermission, ModelDto, ModelsResponse, UpdateUserRequest, UpdateUserModelPermissionDto, UserResetPasswordResponse } from '@/types/models'
+import type { UserDto, GetUsersResponse, GetUserResponse, CreateUserRequest, CreateUserResponse, UserModelPermissionDto, GetUserModelPermissionsResponse, ModelPermission, ModelDto, ModelsResponse, UpdateUserRequest, UpdateUserModelPermissionDto, UserResetPasswordResponse } from '@/types/models'
 import AppNavigation from '@/components/AppNavigation.vue'
 import PageHeader from '@/components/PageHeader.vue'
 
@@ -470,7 +485,8 @@ const editUserData = ref({
   surname: '',
   username: '',
   canCreateModels: false,
-  adminUser: false
+  adminUser: false,
+  mustChangePassword: false
 })
 const loadingPermissions = ref(false)
 const permissionsError = ref<string | null>(null)
@@ -640,18 +656,42 @@ const createUser = async () => {
   }
 }
 
+const fetchUserDetails = async (userId: string): Promise<GetUserResponse | null> => {
+  try {
+    const token = authStore.getAuthToken()
+    if (!token) {
+      authStore.logout()
+      router.push('/')
+      return null
+    }
+
+    const response = await fetch(getApiUrl(`/admin/user/${userId}`), {
+      method: 'GET',
+      headers: getAuthHeaders(token)
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authStore.logout()
+        router.push('/')
+        return null
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (err) {
+    console.error('Failed to fetch user details:', err)
+    editUserError.value = err instanceof Error ? err.message : 'Failed to fetch user details'
+    return null
+  }
+}
+
 const editUser = async (user: UserDto) => {
   console.log('Edit user clicked:', user)
 
-  // Reset form and populate with current user data
+  // Reset form state first
   userToEdit.value = user
-  editUserData.value = {
-    name: user.name,
-    surname: user.surname,
-    username: user.userName,
-    canCreateModels: user.canCreateModels,
-    adminUser: user.adminUser
-  }
   editUserError.value = null
   permissionsError.value = null
   modelsError.value = null
@@ -659,11 +699,26 @@ const editUser = async (user: UserDto) => {
 
   console.log('showEditUser set to:', showEditUser.value)
 
-  // Fetch both models and user permissions simultaneously
-  await Promise.all([
-    fetchAllModels(),
-    fetchUserModelPermissions(user.userId)
-  ])
+  // Fetch detailed user information from backend
+  const userDetails = await fetchUserDetails(user.userId)
+
+  if (userDetails) {
+    // Populate form with detailed user data from backend
+    editUserData.value = {
+      name: userDetails.name,
+      surname: userDetails.surname,
+      username: userDetails.userName,
+      canCreateModels: userDetails.canCreateModels,
+      adminUser: userDetails.adminUser,
+      mustChangePassword: userDetails.mustChangePassword
+    }
+
+    // Fetch both models and user permissions simultaneously
+    await Promise.all([
+      fetchAllModels(),
+      fetchUserModelPermissions(user.userId)
+    ])
+  }
 }
 
 const cancelEditUser = () => {
@@ -674,7 +729,8 @@ const cancelEditUser = () => {
     surname: '',
     username: '',
     canCreateModels: false,
-    adminUser: false
+    adminUser: false,
+    mustChangePassword: false
   }
   editUserError.value = null
   permissionsError.value = null
@@ -892,6 +948,7 @@ const saveUser = async () => {
       username: editUserData.value.username,
       adminUser: editUserData.value.adminUser,
       canCreateModels: editUserData.value.canCreateModels,
+      mustChangePassword: editUserData.value.mustChangePassword,
       permissions: permissions
     }
 
