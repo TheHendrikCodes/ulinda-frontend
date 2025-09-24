@@ -18,7 +18,7 @@
         >
           Account
         </button>
-        <div v-if="showAccountMenu" class="dropdown-menu" @mouseenter="showAccount" @mouseleave="hideAccount">
+        <div v-if="showAccountMenu" class="dropdown-menu">
           <router-link
             to="/account/change-password"
             class="dropdown-item"
@@ -36,7 +36,7 @@
         >
           Admin
         </button>
-        <div v-if="showAdminMenu" class="dropdown-menu" @mouseenter="showAdmin" @mouseleave="hideAdmin">
+        <div v-if="showAdminMenu" class="dropdown-menu">
           <router-link
             to="/admin/users"
             class="dropdown-item"
@@ -112,22 +112,37 @@ const navigateToModels = () => {
   router.push('/models')
 }
 
+let adminHideTimeout: number | null = null
+let accountHideTimeout: number | null = null
+
 const showAdmin = () => {
+  if (adminHideTimeout) {
+    clearTimeout(adminHideTimeout)
+    adminHideTimeout = null
+  }
   showAdminMenu.value = true
   showAccountMenu.value = false // Close account menu
 }
 
 const hideAdmin = () => {
-  showAdminMenu.value = false
+  adminHideTimeout = setTimeout(() => {
+    showAdminMenu.value = false
+  }, 150)
 }
 
 const showAccount = () => {
+  if (accountHideTimeout) {
+    clearTimeout(accountHideTimeout)
+    accountHideTimeout = null
+  }
   showAccountMenu.value = true
   showAdminMenu.value = false // Close admin menu
 }
 
 const hideAccount = () => {
-  showAccountMenu.value = false
+  accountHideTimeout = setTimeout(() => {
+    showAccountMenu.value = false
+  }, 150)
 }
 
 const handleLogout = () => {
@@ -210,7 +225,7 @@ const handleLogout = () => {
   border-radius: 6px;
   overflow: hidden;
   z-index: 2000;
-  margin-top: 0.5rem;
+  margin-top: 0;
   border: 1px solid #e0e0e0;
   animation: fadeIn 0.15s ease-out;
 }
