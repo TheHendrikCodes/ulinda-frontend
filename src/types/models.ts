@@ -221,6 +221,7 @@ export interface UpdateUserRequest {
   userId: string
   name?: string
   surname?: string
+  username: string
   adminUser: boolean
   canCreateModels: boolean
   permissions: UpdateUserModelPermissionDto[]

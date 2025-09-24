@@ -789,6 +789,7 @@ const saveUser = async () => {
       userId: userToEdit.value.userId,
       name: editUserData.value.name || undefined,
       surname: editUserData.value.surname || undefined,
+      username: editUserData.value.username,
       adminUser: editUserData.value.adminUser,
       canCreateModels: editUserData.value.canCreateModels,
       permissions: permissions
