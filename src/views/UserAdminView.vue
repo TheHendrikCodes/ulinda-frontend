@@ -57,7 +57,11 @@
                     </span>
                   </td>
                   <td class="action-cell">
-                    <button @click="editUser(user)" class="action-btn edit-btn">
+                    <button
+                      v-if="user.userName !== 'admin'"
+                      @click="editUser(user)"
+                      class="action-btn edit-btn"
+                    >
                       Edit
                     </button>
                   </td>
@@ -223,6 +227,14 @@
           <div class="edit-user-content">
             <div class="edit-user-header">
               <h3>Edit User</h3>
+              <button
+                type="button"
+                @click="resetPassword"
+                class="reset-password-btn"
+                :disabled="editingUser"
+              >
+                Reset Password
+              </button>
             </div>
 
             <div v-if="editUserError" class="error-message">
@@ -620,6 +632,11 @@ const cancelEditUser = () => {
   userModelPermissions.value = []
   permissionsByModel.value = {}
   allModels.value = []
+}
+
+const resetPassword = () => {
+  // TODO: Implement password reset functionality
+  console.log('Reset password clicked for user:', userToEdit.value?.userName)
 }
 
 const fetchAllModels = async () => {
@@ -1361,7 +1378,10 @@ onMounted(() => {
 
 .edit-user-header {
   margin-bottom: 1.5rem;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 .edit-user-header h3 {
@@ -1369,6 +1389,36 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
+}
+
+.reset-password-btn {
+  background-color: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+  min-width: 120px;
+  position: absolute;
+  right: 0;
+}
+
+.reset-password-btn:hover:not(:disabled) {
+  background-color: #e0a800;
+  transform: translateY(-1px);
+}
+
+.reset-password-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reset-password-btn:active {
+  transform: translateY(0);
 }
 
 .edit-user-form {
