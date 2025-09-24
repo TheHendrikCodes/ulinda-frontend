@@ -24,6 +24,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/account/change-password',
+      name: 'change-password',
+      component: () => import('../views/ChangePasswordView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/admin/users',
       name: 'user-admin',
       component: () => import('../views/UserAdminView.vue'),

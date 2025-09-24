@@ -2,15 +2,34 @@
   <nav class="navbar">
     <div class="nav-left">
       <div class="nav-item dropdown">
-        <button 
-          class="nav-button" 
+        <button
+          class="nav-button"
           :class="{ active: currentPage === 'models' }"
           @click="navigateToModels"
         >
           Models
         </button>
       </div>
-      
+
+      <div class="nav-item dropdown">
+        <button
+          class="nav-button"
+          :class="{ active: isAccountPage }"
+          @click="toggleAccountMenu"
+        >
+          Account
+        </button>
+        <div v-if="showAccountMenu" class="dropdown-menu">
+          <router-link
+            to="/account/change-password"
+            class="dropdown-item"
+            :class="{ active: currentPage === 'account/change-password' }"
+          >
+            Change Password
+          </router-link>
+        </div>
+      </div>
+
       <div class="nav-item dropdown">
         <button 
           class="nav-button" 
@@ -70,10 +89,12 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const showAdminMenu = ref(false)
+const showAccountMenu = ref(false)
 
 const currentPage = computed(() => {
   const path = route.path
   if (path === '/models') return 'models'
+  if (path === '/account/change-password') return 'account/change-password'
   if (path === '/admin/users') return 'admin/users'
   if (path === '/admin/models' || path.startsWith('/admin/models/')) return 'admin/models'
   if (path === '/admin/logs') return 'admin/logs'
@@ -85,12 +106,20 @@ const isAdminPage = computed(() => {
   return currentPage.value.startsWith('admin')
 })
 
+const isAccountPage = computed(() => {
+  return currentPage.value.startsWith('account')
+})
+
 const navigateToModels = () => {
   router.push('/models')
 }
 
 const toggleAdminMenu = () => {
   showAdminMenu.value = !showAdminMenu.value
+}
+
+const toggleAccountMenu = () => {
+  showAccountMenu.value = !showAccountMenu.value
 }
 
 const handleLogout = () => {
