@@ -266,7 +266,7 @@
         </div>
 
         <!-- Edit User Container -->
-        <div v-if="showEditUser" class="edit-user-container">
+        <div v-if="showEditUser && !showResetPasswordDisplay" class="edit-user-container">
           <div class="edit-user-content">
             <div class="edit-user-header">
               <h3>Edit User</h3>
