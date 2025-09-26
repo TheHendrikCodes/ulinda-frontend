@@ -171,11 +171,23 @@
         </div>
 
         <div v-else class="links-grid">
-          <div v-for="link in modelLinks" :key="`${link.model1Id}-${link.model2Id}`" class="link-card">
+          <div
+            v-for="link in modelLinks"
+            :key="`${link.model1Id}-${link.model2Id}`"
+            v-show="!editingLinkId || editingLinkId === `${link.model1Id}-${link.model2Id}`"
+            class="link-card"
+          >
             <div class="card-header">
               <h3 class="model-relationship">
                 {{ link.model1Name }} ↔ {{ link.model2Name }}
               </h3>
+              <button
+                @click="editModelLink(link)"
+                class="edit-link-btn"
+                :disabled="editingLinkId === `${link.model1Id}-${link.model2Id}`"
+              >
+                Edit
+              </button>
             </div>
 
             <div class="card-body">
@@ -203,6 +215,99 @@
                     <span v-else class="limited-badge">
                       Can have max {{ link.model2_can_have_so_many_model1s_count || 0 }} {{ link.model1Name }}s
                     </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Container -->
+            <div
+              v-if="editingLinkId === `${link.model1Id}-${link.model2Id}`"
+              class="edit-link-container"
+            >
+              <div class="edit-link-content">
+                <div class="edit-link-header">
+                  <h3>Edit Model Link</h3>
+                </div>
+
+                <div class="edit-form">
+                  <div class="relationship-config">
+                    <div class="model-config-section">
+                      <h5>{{ editingLink.model1Name }} can have:</h5>
+                      <div class="config-option">
+                        <input
+                          id="editModel1Unlimited"
+                          v-model="editingLink.model1_can_have_unlimited_model2s"
+                          type="checkbox"
+                          class="form-checkbox"
+                          @change="onEditModel1UnlimitedChange"
+                        />
+                        <label for="editModel1Unlimited" class="checkbox-label">
+                          Unlimited {{ editingLink.model2Name }} records
+                        </label>
+                      </div>
+
+                      <div v-if="!editingLink.model1_can_have_unlimited_model2s" class="form-group">
+                        <label for="editModel1Count" class="form-label">
+                          Maximum {{ editingLink.model2Name }} records
+                        </label>
+                        <input
+                          id="editModel1Count"
+                          v-model.number="editingLink.model1_can_have_so_many_model2s_count"
+                          type="number"
+                          min="0"
+                          class="form-input"
+                          placeholder="Enter maximum count"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="model-config-section">
+                      <h5>{{ editingLink.model2Name }} can have:</h5>
+                      <div class="config-option">
+                        <input
+                          id="editModel2Unlimited"
+                          v-model="editingLink.model2_can_have_unlimited_model1s"
+                          type="checkbox"
+                          class="form-checkbox"
+                          @change="onEditModel2UnlimitedChange"
+                        />
+                        <label for="editModel2Unlimited" class="checkbox-label">
+                          Unlimited {{ editingLink.model1Name }} records
+                        </label>
+                      </div>
+
+                      <div v-if="!editingLink.model2_can_have_unlimited_model1s" class="form-group">
+                        <label for="editModel2Count" class="form-label">
+                          Maximum {{ editingLink.model1Name }} records
+                        </label>
+                        <input
+                          id="editModel2Count"
+                          v-model.number="editingLink.model2_can_have_so_many_model1s_count"
+                          type="number"
+                          min="0"
+                          class="form-input"
+                          placeholder="Enter maximum count"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="edit-link-actions">
+                    <button
+                      type="button"
+                      @click="cancelEditModelLink"
+                      class="cancel-edit-link-btn"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      @click="saveEditModelLink"
+                      class="save-edit-link-btn"
+                    >
+                      Save Changes
+                    </button>
                   </div>
                 </div>
               </div>
@@ -250,6 +355,19 @@ const newLink = ref<LinkModelsRequest>({
   model2_can_have_so_many_model1s_count: null,
   model1Name: '',
   model2Name: ''
+})
+
+// Edit Model Link State
+const editingLinkId = ref<string | null>(null)
+const editingLink = ref<ModelLinkDto>({
+  model1Id: '',
+  model2Id: '',
+  model1Name: '',
+  model2Name: '',
+  model1_can_have_unlimited_model2s: false,
+  model2_can_have_unlimited_model1s: false,
+  model1_can_have_so_many_model2s_count: null,
+  model2_can_have_so_many_model1s_count: null
 })
 
 const fetchModelLinks = async () => {
@@ -420,6 +538,68 @@ const createModelLink = async () => {
 
 const goBack = () => {
   router.push({ name: 'models-admin' })
+}
+
+// Edit Model Link Functions
+const editModelLink = (link: ModelLinkDto) => {
+  editingLinkId.value = `${link.model1Id}-${link.model2Id}`
+  editingLink.value = {
+    model1Id: link.model1Id,
+    model2Id: link.model2Id,
+    model1Name: link.model1Name,
+    model2Name: link.model2Name,
+    model1_can_have_unlimited_model2s: link.model1_can_have_unlimited_model2s,
+    model2_can_have_unlimited_model1s: link.model2_can_have_unlimited_model1s,
+    model1_can_have_so_many_model2s_count: link.model1_can_have_so_many_model2s_count,
+    model2_can_have_so_many_model1s_count: link.model2_can_have_so_many_model1s_count
+  }
+}
+
+const cancelEditModelLink = () => {
+  editingLinkId.value = null
+  editingLink.value = {
+    model1Id: '',
+    model2Id: '',
+    model1Name: '',
+    model2Name: '',
+    model1_can_have_unlimited_model2s: false,
+    model2_can_have_unlimited_model1s: false,
+    model1_can_have_so_many_model2s_count: null,
+    model2_can_have_so_many_model1s_count: null
+  }
+}
+
+const onEditModel1UnlimitedChange = () => {
+  if (editingLink.value.model1_can_have_unlimited_model2s) {
+    editingLink.value.model1_can_have_so_many_model2s_count = null
+  }
+}
+
+const onEditModel2UnlimitedChange = () => {
+  if (editingLink.value.model2_can_have_unlimited_model1s) {
+    editingLink.value.model2_can_have_so_many_model1s_count = null
+  }
+}
+
+const saveEditModelLink = () => {
+  // For now, just close the edit container since server calls will be implemented later
+  // Update the model link in the local array
+  const linkIndex = modelLinks.value.findIndex(
+    link => `${link.model1Id}-${link.model2Id}` === editingLinkId.value
+  )
+
+  if (linkIndex !== -1) {
+    modelLinks.value[linkIndex] = {
+      ...modelLinks.value[linkIndex],
+      model1_can_have_unlimited_model2s: editingLink.value.model1_can_have_unlimited_model2s,
+      model2_can_have_unlimited_model1s: editingLink.value.model2_can_have_unlimited_model1s,
+      model1_can_have_so_many_model2s_count: editingLink.value.model1_can_have_so_many_model2s_count,
+      model2_can_have_so_many_model1s_count: editingLink.value.model2_can_have_so_many_model1s_count
+    }
+  }
+
+  // Close the edit container
+  cancelEditModelLink()
 }
 
 onMounted(() => {
@@ -884,6 +1064,110 @@ onMounted(() => {
 
 .cancel-add-link-btn:active,
 .confirm-add-link-btn:active {
+  transform: translateY(0);
+}
+
+/* Edit Link Styles */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-link-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.edit-link-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.edit-link-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.edit-link-container {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 12px 12px;
+}
+
+.edit-link-content {
+  padding: 1.5rem;
+}
+
+.edit-link-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.edit-link-header h3 {
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.edit-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.edit-link-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.cancel-edit-link-btn,
+.save-edit-link-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  border: none;
+  min-width: 120px;
+}
+
+.cancel-edit-link-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-edit-link-btn:hover {
+  background-color: #545b62;
+  transform: translateY(-1px);
+}
+
+.save-edit-link-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.save-edit-link-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.cancel-edit-link-btn:active,
+.save-edit-link-btn:active {
   transform: translateY(0);
 }
 </style>
