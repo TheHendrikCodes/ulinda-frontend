@@ -64,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Store authentication data
       token.value = data.token
       tokenExpiry.value = Date.now() + data.expiresIn
-      user.value = { id: username, username }
+      user.value = { id: username, username, adminUser: data.adminUser }
       isAuthenticated.value = true
 
       // Save to localStorage
@@ -99,13 +99,17 @@ export const useAuthStore = defineStore('auth', () => {
     if (token.value && tokenExpiry.value && Date.now() < tokenExpiry.value) {
       return token.value
     }
-    
+
     // Token expired, logout
     if (token.value) {
       logout()
     }
-    
+
     return null
+  }
+
+  function isAdminUser(): boolean {
+    return user.value?.adminUser || false
   }
 
   return {
@@ -114,6 +118,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     login,
     logout,
-    getAuthToken
+    getAuthToken,
+    isAdminUser
   }
 })

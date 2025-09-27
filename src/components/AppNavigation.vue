@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <div class="nav-item dropdown" @mouseenter="showAdmin" @mouseleave="hideAdmin">
+      <div v-if="isUserAdmin" class="nav-item dropdown" @mouseenter="showAdmin" @mouseleave="hideAdmin">
         <button
           class="nav-button"
           :class="{ active: isAdminPage }"
@@ -114,6 +114,10 @@ const isAdminPage = computed(() => {
 
 const isAccountPage = computed(() => {
   return currentPage.value.startsWith('account')
+})
+
+const isUserAdmin = computed(() => {
+  return authStore.isAdminUser()
 })
 
 const navigateToModels = () => {
