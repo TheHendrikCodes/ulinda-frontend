@@ -284,6 +284,10 @@ export interface UpdateLinkedModelsRequest {
   model2_can_have_so_many_model1s_count: number | null
 }
 
+export interface DeleteModelLinkRequest {
+  modelLinkId: string
+}
+
 export interface LinkedRecordDto {
   id: string
   displayName: string

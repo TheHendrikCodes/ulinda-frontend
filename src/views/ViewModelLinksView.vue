@@ -303,6 +303,13 @@
                     </button>
                     <button
                       type="button"
+                      @click="showDeleteModelLinkConfirmation"
+                      class="delete-edit-link-btn"
+                    >
+                      Delete Link
+                    </button>
+                    <button
+                      type="button"
                       @click="saveEditModelLink"
                       class="save-edit-link-btn"
                     >
@@ -312,6 +319,58 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Container -->
+      <div v-if="showDeleteConfirmation" class="delete-confirmation-container">
+        <div class="delete-confirmation-content">
+          <div class="confirmation-header">
+            <h3>Delete Model Link</h3>
+          </div>
+
+          <div v-if="deleteError" class="error-message">
+            <p>{{ deleteError }}</p>
+          </div>
+
+          <div class="confirmation-body">
+            <p class="warning-text">
+              Are you sure you want to delete this model link between <strong>{{ editingLink.model1Name }}</strong> and <strong>{{ editingLink.model2Name }}</strong>?
+            </p>
+            <p class="warning-subtext">
+              This action cannot be undone. Please type <strong>'delete'</strong> in the box below to confirm.
+            </p>
+            <div class="confirmation-input-group">
+              <label for="deleteConfirmation" class="confirmation-label">
+                Type 'delete' to confirm:
+              </label>
+              <input
+                id="deleteConfirmation"
+                v-model="deleteConfirmationText"
+                type="text"
+                class="confirmation-input"
+                placeholder="delete"
+                :disabled="deleting"
+              />
+            </div>
+          </div>
+
+          <div class="confirmation-actions">
+            <button
+              @click="cancelDelete"
+              class="cancel-delete-btn"
+              :disabled="deleting"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmDelete"
+              class="confirm-delete-btn"
+              :disabled="deleteConfirmationText.toLowerCase() !== 'delete' || deleting"
+            >
+              {{ deleting ? 'Deleting...' : 'Delete Model Link' }}
+            </button>
           </div>
         </div>
       </div>
@@ -330,7 +389,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders, API_CONFIG } from '@/config/api'
-import type { ModelLinkDto, GetModelLinksResponse, LinkModelsRequest, UpdateLinkedModelsRequest, Model, ModelsResponse } from '@/types/models'
+import type { ModelLinkDto, GetModelLinksResponse, LinkModelsRequest, UpdateLinkedModelsRequest, DeleteModelLinkRequest, Model, ModelsResponse } from '@/types/models'
 import AppNavigation from '@/components/AppNavigation.vue'
 import PageHeader from '@/components/PageHeader.vue'
 
@@ -370,6 +429,12 @@ const editingLink = ref<ModelLinkDto>({
   model1_can_have_so_many_model2s_count: null,
   model2_can_have_so_many_model1s_count: null
 })
+
+// Delete Model Link State
+const showDeleteConfirmation = ref(false)
+const deleteConfirmationText = ref('')
+const deleting = ref(false)
+const deleteError = ref<string | null>(null)
 
 const fetchModelLinks = async () => {
   loading.value = true
@@ -635,6 +700,69 @@ const saveEditModelLink = async () => {
   } catch (err) {
     console.error('Error updating model link:', err)
     // TODO: Add proper error handling/display
+  }
+}
+
+// Delete Model Link Functions
+const showDeleteModelLinkConfirmation = () => {
+  deleteConfirmationText.value = ''
+  deleteError.value = null
+  showDeleteConfirmation.value = true
+}
+
+const cancelDelete = () => {
+  showDeleteConfirmation.value = false
+  deleteConfirmationText.value = ''
+  deleteError.value = null
+}
+
+const confirmDelete = async () => {
+  if (deleteConfirmationText.value.toLowerCase() !== 'delete') {
+    return
+  }
+
+  deleting.value = true
+  deleteError.value = null
+
+  try {
+    const token = authStore.getAuthToken()
+    if (!token) {
+      router.push('/')
+      return
+    }
+
+    const deleteRequest: DeleteModelLinkRequest = {
+      modelLinkId: editingLink.value.modelLinkId
+    }
+
+    const response = await fetch(getApiUrl('/v1/models/link-models'), {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(deleteRequest)
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authStore.logout()
+        router.push('/')
+        return
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    // Remove the model link from the local array
+    modelLinks.value = modelLinks.value.filter(
+      link => link.modelLinkId !== editingLink.value.modelLinkId
+    )
+
+    // Close both the delete confirmation and edit container
+    showDeleteConfirmation.value = false
+    cancelEditModelLink()
+  } catch (err) {
+    deleteError.value = err instanceof Error ? err.message : 'Failed to delete model link'
+    console.error('Error deleting model link:', err)
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -1171,6 +1299,7 @@ onMounted(() => {
 }
 
 .cancel-edit-link-btn,
+.delete-edit-link-btn,
 .save-edit-link-btn {
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
@@ -1192,6 +1321,16 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
+.delete-edit-link-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-edit-link-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
 .save-edit-link-btn {
   background-color: #007bff;
   color: white;
@@ -1203,7 +1342,145 @@ onMounted(() => {
 }
 
 .cancel-edit-link-btn:active,
+.delete-edit-link-btn:active,
 .save-edit-link-btn:active {
+  transform: translateY(0);
+}
+
+/* Delete Confirmation Styles */
+.delete-confirmation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-header h3 {
+  color: #dc3545;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.confirmation-body {
+  margin-bottom: 2rem;
+}
+
+.warning-text {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.warning-subtext {
+  color: #6c757d;
+  font-size: 0.95rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-input-group {
+  margin-bottom: 1rem;
+}
+
+.confirmation-label {
+  display: block;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.confirmation-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.confirmation-input:focus {
+  outline: none;
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.confirmation-input:disabled {
+  background-color: #f8f9fa;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.cancel-delete-btn,
+.confirm-delete-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+  border: none;
+  min-width: 120px;
+}
+
+.cancel-delete-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-delete-btn:hover:not(:disabled) {
+  background-color: #545b62;
+  transform: translateY(-1px);
+}
+
+.confirm-delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.confirm-delete-btn:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.cancel-delete-btn:disabled,
+.confirm-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancel-delete-btn:active,
+.confirm-delete-btn:active {
   transform: translateY(0);
 }
 </style>
