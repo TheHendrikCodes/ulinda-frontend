@@ -18,7 +18,10 @@
       </div>
 
       <div v-else class="model-details">
-        <div v-if="!showEditModel && !showEditField && !showAddField && !showDeleteConfirmation" class="actions-bar">
+        <div v-if="!showEditModel && !showEditField && !showAddField && !showDeleteConfirmation && !showDeleteModelConfirmation" class="actions-bar">
+          <button @click="showDeleteModelConfirmation = true" class="delete-model-btn">
+            Delete Model
+          </button>
           <button @click="editModel" class="edit-model-btn">
             Edit Model
           </button>
@@ -28,7 +31,7 @@
         </div>
         
         <!-- Fields Table Container -->
-        <div v-if="!showDeleteConfirmation && !showAddField && !showEditModel && !showEditField" class="fields-container">
+        <div v-if="!showDeleteConfirmation && !showDeleteModelConfirmation && !showAddField && !showEditModel && !showEditField" class="fields-container">
           <div v-if="model?.fields.length === 0" class="no-fields">
             <p>No fields found for this model.</p>
           </div>
@@ -130,7 +133,61 @@
             </div>
           </div>
         </div>
-        
+
+        <!-- Delete Model Confirmation Container -->
+        <div v-if="showDeleteModelConfirmation" class="delete-confirmation-container">
+          <div class="delete-confirmation-content">
+            <div class="confirmation-header">
+              <h3>Delete Model</h3>
+            </div>
+
+            <div v-if="deleteModelError" class="error-message">
+              <p>{{ deleteModelError }}</p>
+            </div>
+
+            <div class="confirmation-body">
+              <p class="warning-text">
+                <span v-if="!hasLinkedRecordsError">Are you sure you want to delete the <strong>{{ model?.name }}</strong> model?</span>
+                <span v-else>Are you sure you want to force delete the <strong>{{ model?.name }}</strong> model and all its linked records?</span>
+              </p>
+              <p class="warning-subtext">
+                This action cannot be undone. Please type <strong>'delete'</strong> in the box below to confirm.
+              </p>
+
+              <div class="confirmation-input-group">
+                <label for="deleteModelConfirmation" class="confirmation-label">
+                  Type 'delete' to confirm:
+                </label>
+                <input
+                  id="deleteModelConfirmation"
+                  v-model="deleteModelConfirmationText"
+                  type="text"
+                  class="confirmation-input"
+                  placeholder="delete"
+                  :disabled="deletingModel"
+                />
+              </div>
+            </div>
+
+            <div class="confirmation-actions">
+              <button
+                @click="cancelDeleteModel"
+                class="cancel-delete-btn"
+                :disabled="deletingModel"
+              >
+                Cancel
+              </button>
+              <button
+                @click="confirmDeleteModel"
+                class="confirm-delete-btn"
+                :disabled="deleteModelConfirmationText.toLowerCase() !== 'delete' || deletingModel"
+              >
+                {{ deletingModel ? 'Deleting...' : (hasLinkedRecordsError ? 'Force Delete Model' : 'Delete Model') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Add Field Container -->
         <div v-if="showAddField" class="add-field-container">
           <div class="add-field-content">
@@ -439,6 +496,13 @@ const fieldToDelete = ref<FieldDto | null>(null)
 const deleteConfirmationText = ref('')
 const deleting = ref(false)
 const deleteError = ref<string | null>(null)
+
+// Model delete state
+const showDeleteModelConfirmation = ref(false)
+const deleteModelConfirmationText = ref('')
+const deletingModel = ref(false)
+const deleteModelError = ref<string | null>(null)
+const hasLinkedRecordsError = ref(false)
 const showAddField = ref(false)
 const addingField = ref(false)
 const addFieldError = ref<string | null>(null)
@@ -667,6 +731,83 @@ const confirmDelete = async () => {
   }
 }
 
+// Model delete functions
+const cancelDeleteModel = () => {
+  showDeleteModelConfirmation.value = false
+  deleteModelConfirmationText.value = ''
+  deleteModelError.value = null
+  hasLinkedRecordsError.value = false
+}
+
+const confirmDeleteModel = async () => {
+  if (deleteModelConfirmationText.value.toLowerCase() !== 'delete') {
+    return
+  }
+
+  deletingModel.value = true
+  deleteModelError.value = null
+
+  try {
+    const token = authStore.getAuthToken()
+
+    if (!token) {
+      router.push('/')
+      return
+    }
+
+    const modelId = route.params.modelId as string
+
+    // Add force parameter if this is a retry after linked records error
+    const forceParam = hasLinkedRecordsError.value ? '?force=true' : ''
+    const url = getApiUrl(`/v1/models/${modelId}${forceParam}`)
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: getAuthHeaders(token)
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authStore.logout()
+        router.push('/')
+        return
+      }
+
+      // Handle 500 errors with showMessageToUser
+      if (response.status === 500) {
+        try {
+          const errorData = await response.json()
+          if (errorData.showMessageToUser && errorData.message) {
+            // Check if this is a MODEL_HAS_LINKED_RECORDS error
+            if (errorData.errorCode === 'MODEL_HAS_LINKED_RECORDS') {
+              hasLinkedRecordsError.value = true
+            }
+            throw new Error(errorData.message)
+          }
+        } catch (parseError) {
+          // If JSON parsing failed, fall back to default error
+          if (parseError instanceof SyntaxError) {
+            console.error('Error parsing 500 response JSON:', parseError)
+          } else {
+            // This is our intended error message, re-throw it
+            throw parseError
+          }
+        }
+      }
+
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    // Success! Navigate back to models admin
+    router.push({ name: 'models-admin' })
+  } catch (err) {
+    deleteModelError.value = err instanceof Error ? err.message : 'Failed to delete model'
+    console.error('Error deleting model:', err)
+  } finally {
+    deletingModel.value = false
+  }
+}
+
 const editModel = () => {
   // Reset form and populate with current model data
   editModelData.value = {
@@ -874,6 +1015,27 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   box-sizing: border-box;
+}
+
+.delete-model-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.delete-model-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.delete-model-btn:active {
+  transform: translateY(0);
 }
 
 .edit-model-btn {
