@@ -48,6 +48,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/admin/error-logs',
+      name: 'error-logs',
+      component: () => import('../views/ErrorLogsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/admin/performance',
       name: 'performance',
       component: () => import('../views/PerformanceView.vue'),

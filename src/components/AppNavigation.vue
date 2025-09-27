@@ -59,6 +59,13 @@
             System Logs
           </router-link>
           <router-link
+            to="/admin/error-logs"
+            class="dropdown-item"
+            :class="{ active: currentPage === 'admin/error-logs' }"
+          >
+            Error Logs
+          </router-link>
+          <router-link
             to="/admin/performance"
             class="dropdown-item"
             :class="{ active: currentPage === 'admin/performance' }"
@@ -96,6 +103,7 @@ const currentPage = computed(() => {
   if (path === '/admin/users') return 'admin/users'
   if (path === '/admin/models' || path.startsWith('/admin/models/')) return 'admin/models'
   if (path === '/admin/logs') return 'admin/logs'
+  if (path === '/admin/error-logs') return 'admin/error-logs'
   if (path === '/admin/performance') return 'admin/performance'
   return 'home'
 })

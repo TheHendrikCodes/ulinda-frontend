@@ -312,3 +312,25 @@ export interface LinkRecordsRequest {
 export interface GetLinkedRecordsResponse {
   linkedRecords: LinkedRecordDto[]
 }
+
+export interface ErrorDto {
+  errorIdentifier: string
+  timestamp: string
+  message: string
+}
+
+export interface ErrorPagingInfo {
+  currentPage: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+  first: boolean
+  last: boolean
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface GetErrorsResponse {
+  errors: ErrorDto[]
+  pagingInfo: ErrorPagingInfo
+}
