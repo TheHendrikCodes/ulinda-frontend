@@ -1,10 +1,7 @@
 <template>
   <div class="error-logs">
     <AppNavigation />
-    <PageHeader
-      title="Error Logs"
-      description="View system error logs with pagination."
-    />
+    <PageHeader title="Error Logs" description="View system error logs with pagination." />
 
     <div class="content">
       <div v-if="loading" class="loading">
@@ -25,9 +22,7 @@
         <div class="error-detail-content">
           <div class="error-detail-header">
             <h3>Error Details</h3>
-            <button @click="closeErrorDetail" class="close-detail-btn">
-              Close
-            </button>
+            <button @click="closeErrorDetail" class="close-detail-btn">Close</button>
           </div>
 
           <div v-if="loadingDetail" class="loading-detail">
@@ -41,7 +36,7 @@
 
           <div v-else-if="errorDetail" class="error-detail-body">
             <div class="detail-section">
-              <h4>Error ID</h4>
+              <h4>Error Identifier</h4>
               <p class="error-id-detail">{{ errorDetail.errorIdentifier }}</p>
             </div>
 
@@ -67,7 +62,7 @@
         <table class="logs-table">
           <thead>
             <tr>
-              <th>Error ID</th>
+              <th>Error Identifier</th>
               <th>Timestamp</th>
               <th>Message</th>
               <th>Actions</th>
@@ -95,8 +90,13 @@
         <div v-if="pagingInfo" class="pagination-container">
           <div class="pagination-info">
             <p>
-              Showing {{ (pagingInfo.currentPage * pagingInfo.pageSize) + 1 }} -
-              {{ Math.min((pagingInfo.currentPage + 1) * pagingInfo.pageSize, pagingInfo.totalElements) }}
+              Showing {{ pagingInfo.currentPage * pagingInfo.pageSize + 1 }} -
+              {{
+                Math.min(
+                  (pagingInfo.currentPage + 1) * pagingInfo.pageSize,
+                  pagingInfo.totalElements,
+                )
+              }}
               of {{ pagingInfo.totalElements }} error logs
             </p>
           </div>
@@ -151,7 +151,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -196,7 +195,7 @@ const fetchErrorLogs = async (page = 0, size = pageSize.value) => {
 
     const response = await fetch(getApiUrl(`/admin/errors?size=${size}&pageNumber=${page}`), {
       method: 'GET',
-      headers: getAuthHeaders(token)
+      headers: getAuthHeaders(token),
     })
 
     if (!response.ok) {
@@ -279,7 +278,7 @@ const viewErrorDetail = async (errorIdentifier: string) => {
 
     const response = await fetch(getApiUrl(`/admin/error/${errorIdentifier}`), {
       method: 'GET',
-      headers: getAuthHeaders(token)
+      headers: getAuthHeaders(token),
     })
 
     if (!response.ok) {
@@ -478,7 +477,9 @@ onMounted(() => {
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 }
 
 .view-btn:hover:not(:disabled) {
@@ -646,7 +647,9 @@ onMounted(() => {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 }
 
 .close-detail-btn:hover {
