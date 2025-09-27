@@ -250,6 +250,7 @@ export interface CreateModelRequest {
 }
 
 export interface ModelLinkDto {
+  modelLinkId: string
   model1Id: string
   model2Id: string
   model1_can_have_unlimited_model2s: boolean
@@ -273,6 +274,14 @@ export interface LinkModelsRequest {
   model2_can_have_so_many_model1s_count: number | null
   model1Name: string
   model2Name: string
+}
+
+export interface UpdateLinkedModelsRequest {
+  modelLinkId: string
+  model1_can_have_unlimited_model2s: boolean
+  model2_can_have_unlimited_model1s: boolean
+  model1_can_have_so_many_model2s_count: number | null
+  model2_can_have_so_many_model1s_count: number | null
 }
 
 export interface LinkedRecordDto {

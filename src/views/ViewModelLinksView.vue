@@ -173,8 +173,8 @@
         <div v-else class="links-grid">
           <div
             v-for="link in modelLinks"
-            :key="`${link.model1Id}-${link.model2Id}`"
-            v-show="!editingLinkId || editingLinkId === `${link.model1Id}-${link.model2Id}`"
+            :key="link.modelLinkId"
+            v-show="!editingLinkId || editingLinkId === link.modelLinkId"
             class="link-card"
           >
             <div class="card-header">
@@ -184,7 +184,7 @@
               <button
                 @click="editModelLink(link)"
                 class="edit-link-btn"
-                :disabled="editingLinkId === `${link.model1Id}-${link.model2Id}`"
+                :disabled="editingLinkId === link.modelLinkId"
               >
                 Edit
               </button>
@@ -222,7 +222,7 @@
 
             <!-- Edit Container -->
             <div
-              v-if="editingLinkId === `${link.model1Id}-${link.model2Id}`"
+              v-if="editingLinkId === link.modelLinkId"
               class="edit-link-container"
             >
               <div class="edit-link-content">
@@ -330,7 +330,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders, API_CONFIG } from '@/config/api'
-import type { ModelLinkDto, GetModelLinksResponse, LinkModelsRequest, Model, ModelsResponse } from '@/types/models'
+import type { ModelLinkDto, GetModelLinksResponse, LinkModelsRequest, UpdateLinkedModelsRequest, Model, ModelsResponse } from '@/types/models'
 import AppNavigation from '@/components/AppNavigation.vue'
 import PageHeader from '@/components/PageHeader.vue'
 
@@ -360,6 +360,7 @@ const newLink = ref<LinkModelsRequest>({
 // Edit Model Link State
 const editingLinkId = ref<string | null>(null)
 const editingLink = ref<ModelLinkDto>({
+  modelLinkId: '',
   model1Id: '',
   model2Id: '',
   model1Name: '',
@@ -542,8 +543,9 @@ const goBack = () => {
 
 // Edit Model Link Functions
 const editModelLink = (link: ModelLinkDto) => {
-  editingLinkId.value = `${link.model1Id}-${link.model2Id}`
+  editingLinkId.value = link.modelLinkId
   editingLink.value = {
+    modelLinkId: link.modelLinkId,
     model1Id: link.model1Id,
     model2Id: link.model2Id,
     model1Name: link.model1Name,
@@ -558,6 +560,7 @@ const editModelLink = (link: ModelLinkDto) => {
 const cancelEditModelLink = () => {
   editingLinkId.value = null
   editingLink.value = {
+    modelLinkId: '',
     model1Id: '',
     model2Id: '',
     model1Name: '',
@@ -581,25 +584,58 @@ const onEditModel2UnlimitedChange = () => {
   }
 }
 
-const saveEditModelLink = () => {
-  // For now, just close the edit container since server calls will be implemented later
-  // Update the model link in the local array
-  const linkIndex = modelLinks.value.findIndex(
-    link => `${link.model1Id}-${link.model2Id}` === editingLinkId.value
-  )
+const saveEditModelLink = async () => {
+  try {
+    const token = authStore.getAuthToken()
+    if (!token) {
+      router.push('/')
+      return
+    }
 
-  if (linkIndex !== -1) {
-    modelLinks.value[linkIndex] = {
-      ...modelLinks.value[linkIndex],
+    const updateRequest: UpdateLinkedModelsRequest = {
+      modelLinkId: editingLink.value.modelLinkId,
       model1_can_have_unlimited_model2s: editingLink.value.model1_can_have_unlimited_model2s,
       model2_can_have_unlimited_model1s: editingLink.value.model2_can_have_unlimited_model1s,
       model1_can_have_so_many_model2s_count: editingLink.value.model1_can_have_so_many_model2s_count,
       model2_can_have_so_many_model1s_count: editingLink.value.model2_can_have_so_many_model1s_count
     }
-  }
 
-  // Close the edit container
-  cancelEditModelLink()
+    const response = await fetch(getApiUrl('/v1/models/linked-models'), {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(updateRequest)
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authStore.logout()
+        router.push('/')
+        return
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    // Update the model link in the local array
+    const linkIndex = modelLinks.value.findIndex(
+      link => link.modelLinkId === editingLinkId.value
+    )
+
+    if (linkIndex !== -1) {
+      modelLinks.value[linkIndex] = {
+        ...modelLinks.value[linkIndex],
+        model1_can_have_unlimited_model2s: editingLink.value.model1_can_have_unlimited_model2s,
+        model2_can_have_unlimited_model1s: editingLink.value.model2_can_have_unlimited_model1s,
+        model1_can_have_so_many_model2s_count: editingLink.value.model1_can_have_so_many_model2s_count,
+        model2_can_have_so_many_model1s_count: editingLink.value.model2_can_have_so_many_model1s_count
+      }
+    }
+
+    // Close the edit container
+    cancelEditModelLink()
+  } catch (err) {
+    console.error('Error updating model link:', err)
+    // TODO: Add proper error handling/display
+  }
 }
 
 onMounted(() => {
