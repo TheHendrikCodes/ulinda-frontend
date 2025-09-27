@@ -73,7 +73,7 @@ export enum SearchFieldIdentifier {
   ID = 'ID',
   CREATED_AT = 'CREATED_AT',
   UPDATED_AT = 'UPDATED_AT',
-  CUSTOM_FIELD = 'CUSTOM_FIELD'
+  CUSTOM_FIELD = 'CUSTOM_FIELD',
 }
 
 export enum SearchType {
@@ -97,13 +97,13 @@ export enum SearchType {
   DECIMAL_LESS_THAN = 'DECIMAL_LESS_THAN',
   LONG_EQUALS = 'LONG_EQUALS',
   LONG_GREATER_THAN = 'LONG_GREATER_THAN',
-  LONG_LESS_THAN = 'LONG_LESS_THAN'
+  LONG_LESS_THAN = 'LONG_LESS_THAN',
 }
 
 export enum QueryType {
   ALL_RECORDS = 'ALL_RECORDS',
   LINKED_RECORDS = 'LINKED_RECORDS',
-  RECORDS_NOT_LINKED = 'RECORDS_NOT_LINKED'
+  RECORDS_NOT_LINKED = 'RECORDS_NOT_LINKED',
 }
 
 export interface GetRecordsRequest {
@@ -212,8 +212,6 @@ export enum ModelPermission {
   ADD_RECORDS = 'ADD_RECORDS',
   EDIT_RECORDS = 'EDIT_RECORDS',
   DELETE_RECORDS = 'DELETE_RECORDS',
-  ADD_FIELDS = 'ADD_FIELDS',
-  REMOVE_FIELDS = 'REMOVE_FIELDS'
 }
 
 export interface UserModelPermissionDto {

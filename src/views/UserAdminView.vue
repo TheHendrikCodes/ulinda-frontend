@@ -18,13 +18,14 @@
 
       <div v-else class="user-details">
         <div v-if="!showEditUser" class="actions-bar">
-          <button @click="addUser" class="add-user-btn">
-            Add New User
-          </button>
+          <button @click="addUser" class="add-user-btn">Add New User</button>
         </div>
 
         <!-- Users Table Container -->
-        <div v-if="!showAddUser && !showEditUser && !showPasswordDisplay && !showResetPasswordDisplay" class="users-container">
+        <div
+          v-if="!showAddUser && !showEditUser && !showPasswordDisplay && !showResetPasswordDisplay"
+          class="users-container"
+        >
           <div v-if="users.length === 0" class="no-users">
             <p>No users found.</p>
           </div>
@@ -47,22 +48,26 @@
                   <td class="user-surname">{{ user.surname }}</td>
                   <td class="user-username">{{ user.userName }}</td>
                   <td class="user-admin-cell">
-                    <span class="boolean-badge" :class="{ 'boolean-true': user.adminUser, 'boolean-false': !user.adminUser }">
+                    <span
+                      class="boolean-badge"
+                      :class="{ 'boolean-true': user.adminUser, 'boolean-false': !user.adminUser }"
+                    >
                       {{ user.adminUser ? 'Yes' : 'No' }}
                     </span>
                   </td>
                   <td class="user-can-create">
-                    <span class="boolean-badge" :class="{ 'boolean-true': user.canCreateModels, 'boolean-false': !user.canCreateModels }">
+                    <span
+                      class="boolean-badge"
+                      :class="{
+                        'boolean-true': user.canCreateModels,
+                        'boolean-false': !user.canCreateModels,
+                      }"
+                    >
                       {{ user.canCreateModels ? 'Yes' : 'No' }}
                     </span>
                   </td>
                   <td class="action-cell">
-                    <button
-                      @click="editUser(user)"
-                      class="action-btn edit-btn"
-                    >
-                      Edit
-                    </button>
+                    <button @click="editUser(user)" class="action-btn edit-btn">Edit</button>
                   </td>
                 </tr>
               </tbody>
@@ -83,9 +88,7 @@
 
             <form @submit.prevent="createUser" class="add-user-form">
               <div class="form-group">
-                <label for="userName" class="form-label">
-                  Name
-                </label>
+                <label for="userName" class="form-label"> Name </label>
                 <input
                   id="userName"
                   v-model="newUser.name"
@@ -97,9 +100,7 @@
               </div>
 
               <div class="form-group">
-                <label for="userSurname" class="form-label">
-                  Surname
-                </label>
+                <label for="userSurname" class="form-label"> Surname </label>
                 <input
                   id="userSurname"
                   v-model="newUser.surname"
@@ -151,9 +152,7 @@
                     class="form-checkbox"
                     :disabled="addingUser"
                   />
-                  <label for="adminUser" class="checkbox-label">
-                    Admin User
-                  </label>
+                  <label for="adminUser" class="checkbox-label"> Admin User </label>
                 </div>
               </div>
 
@@ -198,23 +197,21 @@
                   </div>
                   <div class="credential-row">
                     <label class="credential-label">Password:</label>
-                    <span class="credential-value password-value">{{ newUserPassword?.password }}</span>
+                    <span class="credential-value password-value">{{
+                      newUserPassword?.password
+                    }}</span>
                   </div>
                 </div>
 
                 <div class="password-warning">
-                  <strong>Important:</strong> This password will not be shown again.
-                  Please ensure the user receives these credentials securely.
+                  <strong>Important:</strong> This password will not be shown again. Please ensure
+                  the user receives these credentials securely.
                 </div>
               </div>
             </div>
 
             <div class="password-display-actions">
-              <button
-                type="button"
-                @click="closePasswordDisplay"
-                class="password-ok-btn"
-              >
+              <button type="button" @click="closePasswordDisplay" class="password-ok-btn">
                 OK
               </button>
             </div>
@@ -230,7 +227,10 @@
 
             <div class="password-display-body">
               <div class="success-message">
-                <p>The password has been reset for the user. Please provide the new credentials securely.</p>
+                <p>
+                  The password has been reset for the user. Please provide the new credentials
+                  securely.
+                </p>
               </div>
 
               <div class="credentials-section">
@@ -241,23 +241,21 @@
                   </div>
                   <div class="credential-row">
                     <label class="credential-label">New Password:</label>
-                    <span class="credential-value password-value">{{ resetUserPassword?.newPassword }}</span>
+                    <span class="credential-value password-value">{{
+                      resetUserPassword?.newPassword
+                    }}</span>
                   </div>
                 </div>
 
                 <div class="password-warning">
-                  <strong>Important:</strong> This new password will not be shown again.
-                  Please ensure the user receives these credentials securely.
+                  <strong>Important:</strong> This new password will not be shown again. Please
+                  ensure the user receives these credentials securely.
                 </div>
               </div>
             </div>
 
             <div class="password-display-actions">
-              <button
-                type="button"
-                @click="closeResetPasswordDisplay"
-                class="password-ok-btn"
-              >
+              <button type="button" @click="closeResetPasswordDisplay" class="password-ok-btn">
                 OK
               </button>
             </div>
@@ -285,9 +283,7 @@
 
             <form @submit.prevent="saveUser" class="edit-user-form">
               <div class="form-group">
-                <label for="editUserName" class="form-label">
-                  Name
-                </label>
+                <label for="editUserName" class="form-label"> Name </label>
                 <input
                   id="editUserName"
                   v-model="editUserData.name"
@@ -299,9 +295,7 @@
               </div>
 
               <div class="form-group">
-                <label for="editUserSurname" class="form-label">
-                  Surname
-                </label>
+                <label for="editUserSurname" class="form-label"> Surname </label>
                 <input
                   id="editUserSurname"
                   v-model="editUserData.surname"
@@ -353,9 +347,7 @@
                     class="form-checkbox"
                     :disabled="editingUser || userToEdit?.userName === 'admin'"
                   />
-                  <label for="editAdminUser" class="checkbox-label">
-                    Admin User
-                  </label>
+                  <label for="editAdminUser" class="checkbox-label"> Admin User </label>
                 </div>
               </div>
 
@@ -393,34 +385,42 @@
                 <div v-else class="permissions-table-wrapper">
                   <div class="permissions-table-container">
                     <table class="permissions-table">
-                    <thead>
-                      <tr>
-                        <th class="model-header">Model</th>
-                        <th v-for="permission in getAllPermissions()" :key="permission" class="permission-header">
-                          {{ permission.replace('_', ' ') }}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="model in getUniqueModels()" :key="model.id">
-                        <td class="model-cell">
-                          <div class="model-info">
-                            <strong>{{ model.name }}</strong>
-                            <small v-if="model.description">{{ model.description }}</small>
-                          </div>
-                        </td>
-                        <td v-for="permission in getAllPermissions()" :key="permission" class="permission-cell">
-                          <input
-                            type="checkbox"
-                            :checked="hasPermission(model.id, permission)"
-                            @change="togglePermission(model.id, permission)"
-                            class="permission-checkbox"
-                            :disabled="editingUser"
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                      <thead>
+                        <tr>
+                          <th class="model-header">Model</th>
+                          <th
+                            v-for="permission in getAllPermissions()"
+                            :key="permission"
+                            class="permission-header"
+                          >
+                            {{ permission.replace('_', ' ') }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="model in getUniqueModels()" :key="model.id">
+                          <td class="model-cell">
+                            <div class="model-info">
+                              <strong>{{ model.name }}</strong>
+                              <small v-if="model.description">{{ model.description }}</small>
+                            </div>
+                          </td>
+                          <td
+                            v-for="permission in getAllPermissions()"
+                            :key="permission"
+                            class="permission-cell"
+                          >
+                            <input
+                              type="checkbox"
+                              :checked="hasPermission(model.id, permission)"
+                              @change="togglePermission(model.id, permission)"
+                              class="permission-checkbox"
+                              :disabled="editingUser"
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -437,7 +437,9 @@
                 <button
                   type="submit"
                   class="save-edit-btn"
-                  :disabled="!editUserData.username || editingUser || userToEdit?.userName === 'admin'"
+                  :disabled="
+                    !editUserData.username || editingUser || userToEdit?.userName === 'admin'
+                  "
                 >
                   {{ editingUser ? 'Saving...' : 'Save Changes' }}
                 </button>
@@ -455,7 +457,21 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders } from '@/config/api'
-import type { UserDto, GetUsersResponse, GetUserResponse, CreateUserRequest, CreateUserResponse, UserModelPermissionDto, GetUserModelPermissionsResponse, ModelPermission, ModelDto, ModelsResponse, UpdateUserRequest, UpdateUserModelPermissionDto, UserResetPasswordResponse } from '@/types/models'
+import type {
+  UserDto,
+  GetUsersResponse,
+  GetUserResponse,
+  CreateUserRequest,
+  CreateUserResponse,
+  UserModelPermissionDto,
+  GetUserModelPermissionsResponse,
+  ModelPermission,
+  ModelDto,
+  ModelsResponse,
+  UpdateUserRequest,
+  UpdateUserModelPermissionDto,
+  UserResetPasswordResponse,
+} from '@/types/models'
 import AppNavigation from '@/components/AppNavigation.vue'
 import PageHeader from '@/components/PageHeader.vue'
 
@@ -473,7 +489,7 @@ const newUser = ref({
   surname: '',
   username: '',
   canCreateModels: false,
-  adminUser: false
+  adminUser: false,
 })
 const showEditUser = ref(false)
 const editingUser = ref(false)
@@ -485,7 +501,7 @@ const editUserData = ref({
   username: '',
   canCreateModels: false,
   adminUser: false,
-  mustChangePassword: false
+  mustChangePassword: false,
 })
 const loadingPermissions = ref(false)
 const permissionsError = ref<string | null>(null)
@@ -513,7 +529,7 @@ const fetchUsers = async () => {
 
     const response = await fetch(getApiUrl('/admin/users'), {
       method: 'GET',
-      headers: getAuthHeaders(token)
+      headers: getAuthHeaders(token),
     })
 
     if (!response.ok) {
@@ -542,7 +558,7 @@ const addUser = () => {
     surname: '',
     username: '',
     canCreateModels: false,
-    adminUser: false
+    adminUser: false,
   }
   addUserError.value = null
   showAddUser.value = true
@@ -555,7 +571,7 @@ const cancelAddUser = () => {
     surname: '',
     username: '',
     canCreateModels: false,
-    adminUser: false
+    adminUser: false,
   }
   addUserError.value = null
 }
@@ -592,13 +608,13 @@ const createUser = async () => {
       surname: newUser.value.surname,
       username: newUser.value.username,
       canCreateModels: newUser.value.canCreateModels,
-      adminUser: newUser.value.adminUser
+      adminUser: newUser.value.adminUser,
     }
 
     const response = await fetch(getApiUrl('/admin/users'), {
       method: 'POST',
       headers: getAuthHeaders(token),
-      body: JSON.stringify(userData)
+      body: JSON.stringify(userData),
     })
 
     if (!response.ok) {
@@ -642,7 +658,7 @@ const createUser = async () => {
       surname: '',
       username: '',
       canCreateModels: false,
-      adminUser: false
+      adminUser: false,
     }
 
     // Reload users data to reflect changes
@@ -666,7 +682,7 @@ const fetchUserDetails = async (userId: string): Promise<GetUserResponse | null>
 
     const response = await fetch(getApiUrl(`/admin/user/${userId}`), {
       method: 'GET',
-      headers: getAuthHeaders(token)
+      headers: getAuthHeaders(token),
     })
 
     if (!response.ok) {
@@ -709,14 +725,11 @@ const editUser = async (user: UserDto) => {
       username: userDetails.userName,
       canCreateModels: userDetails.canCreateModels,
       adminUser: userDetails.adminUser,
-      mustChangePassword: userDetails.mustChangePassword
+      mustChangePassword: userDetails.mustChangePassword,
     }
 
     // Fetch both models and user permissions simultaneously
-    await Promise.all([
-      fetchAllModels(),
-      fetchUserModelPermissions(user.userId)
-    ])
+    await Promise.all([fetchAllModels(), fetchUserModelPermissions(user.userId)])
   }
 }
 
@@ -729,7 +742,7 @@ const cancelEditUser = () => {
     username: '',
     canCreateModels: false,
     adminUser: false,
-    mustChangePassword: false
+    mustChangePassword: false,
   }
   editUserError.value = null
   permissionsError.value = null
@@ -752,10 +765,13 @@ const resetPassword = async () => {
       return
     }
 
-    const response = await fetch(getApiUrl(`/admin/user/reset-password/${userToEdit.value.userId}`), {
-      method: 'GET',
-      headers: getAuthHeaders(token)
-    })
+    const response = await fetch(
+      getApiUrl(`/admin/user/reset-password/${userToEdit.value.userId}`),
+      {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      },
+    )
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -767,7 +783,7 @@ const resetPassword = async () => {
     // Store the password reset response and show password display
     resetUserPassword.value = {
       username: userToEdit.value.userName,
-      newPassword: responseData.newPassword
+      newPassword: responseData.newPassword,
     }
     showResetPasswordDisplay.value = true
 
@@ -792,7 +808,7 @@ const fetchAllModels = async () => {
 
     const response = await fetch(getApiUrl('/v1/models'), {
       method: 'GET',
-      headers: getAuthHeaders(token)
+      headers: getAuthHeaders(token),
     })
 
     if (!response.ok) {
@@ -830,7 +846,7 @@ const fetchUserModelPermissions = async (userId: string) => {
 
     const response = await fetch(getApiUrl(`/admin/user/model-permissions/${userId}`), {
       method: 'GET',
-      headers: getAuthHeaders(token)
+      headers: getAuthHeaders(token),
     })
 
     if (!response.ok) {
@@ -847,7 +863,7 @@ const fetchUserModelPermissions = async (userId: string) => {
 
     // Group permissions by model
     const grouped: Record<string, ModelPermission[]> = {}
-    data.userModelPermissions.forEach(perm => {
+    data.userModelPermissions.forEach((perm) => {
       if (!grouped[perm.modelId]) {
         grouped[perm.modelId] = []
       }
@@ -866,22 +882,15 @@ const fetchUserModelPermissions = async (userId: string) => {
 
 const getUniqueModels = () => {
   // Return all models from the models API, not just those with permissions
-  return allModels.value.map(model => ({
+  return allModels.value.map((model) => ({
     id: model.id,
     name: model.name,
-    description: model.description
+    description: model.description,
   }))
 }
 
 const getAllPermissions = () => {
-  return [
-    'VIEW_RECORDS',
-    'ADD_RECORDS',
-    'EDIT_RECORDS',
-    'DELETE_RECORDS',
-    'ADD_FIELDS',
-    'REMOVE_FIELDS'
-  ]
+  return ['VIEW_RECORDS', 'ADD_RECORDS', 'EDIT_RECORDS', 'DELETE_RECORDS']
 }
 
 const hasPermission = (modelId: string, permission: string) => {
@@ -929,12 +938,12 @@ const saveUser = async () => {
     // Transform permissions data for API request
     const permissions: UpdateUserModelPermissionDto[] = []
 
-    Object.keys(permissionsByModel.value).forEach(modelId => {
+    Object.keys(permissionsByModel.value).forEach((modelId) => {
       const modelPermissions = permissionsByModel.value[modelId]
-      modelPermissions.forEach(permission => {
+      modelPermissions.forEach((permission) => {
         permissions.push({
           modelId: modelId,
-          permission: permission
+          permission: permission,
         })
       })
     })
@@ -948,7 +957,7 @@ const saveUser = async () => {
       adminUser: editUserData.value.adminUser,
       canCreateModels: editUserData.value.canCreateModels,
       mustChangePassword: editUserData.value.mustChangePassword,
-      permissions: permissions
+      permissions: permissions,
     }
 
     console.log('Saving user with data:', updateUserRequest)
@@ -956,7 +965,7 @@ const saveUser = async () => {
     const response = await fetch(getApiUrl('/admin/user/model-permissions'), {
       method: 'POST',
       headers: getAuthHeaders(token),
-      body: JSON.stringify(updateUserRequest)
+      body: JSON.stringify(updateUserRequest),
     })
 
     if (!response.ok) {
@@ -978,7 +987,7 @@ const saveUser = async () => {
       surname: '',
       username: '',
       canCreateModels: false,
-      adminUser: false
+      adminUser: false,
     }
     editUserError.value = null
     permissionsError.value = null
@@ -1185,7 +1194,9 @@ onMounted(() => {
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   min-width: 60px;
 }
 
@@ -1218,7 +1229,9 @@ onMounted(() => {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 }
 
 .add-user-btn:hover {
@@ -1284,7 +1297,9 @@ onMounted(() => {
   border: 1px solid #ced4da;
   border-radius: 6px;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   box-sizing: border-box;
 }
 
@@ -1336,7 +1351,10 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s,
+    opacity 0.2s;
   border: none;
   min-width: 120px;
 }
@@ -1489,7 +1507,9 @@ onMounted(() => {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   min-width: 100px;
 }
 
@@ -1540,7 +1560,10 @@ onMounted(() => {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s,
+    opacity 0.2s;
   min-width: 120px;
   position: absolute;
   right: 0;
@@ -1736,7 +1759,10 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s,
+    opacity 0.2s;
   border: none;
   min-width: 120px;
 }
