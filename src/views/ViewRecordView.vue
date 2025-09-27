@@ -1268,7 +1268,8 @@
 
           <div class="confirmation-body">
             <p class="warning-text">
-              Are you sure you want to delete this record?
+              <span v-if="!hasLinkedModelsError">Are you sure you want to delete this record?</span>
+              <span v-else>Are you sure you want to force delete this record and all its linked relationships?</span>
             </p>
             <p class="warning-subtext">
               This action cannot be undone. Please type <strong>'delete'</strong> in the box below to confirm.
@@ -1302,7 +1303,7 @@
               class="confirm-delete-btn"
               :disabled="deleteConfirmationText.toLowerCase() !== 'delete' || deleting"
             >
-              {{ deleting ? 'Deleting...' : 'Delete Record' }}
+              {{ deleting ? 'Deleting...' : (hasLinkedModelsError ? 'Force Delete Record' : 'Delete Record') }}
             </button>
           </div>
         </div>
@@ -1347,6 +1348,7 @@ const showDeleteConfirmation = ref(false)
 const deleteConfirmationText = ref('')
 const deleting = ref(false)
 const deleteError = ref<string | null>(null)
+const hasLinkedModelsError = ref(false)
 
 // Linked records state
 const linkedRecords = ref<Record<string, RecordType[]>>({})
@@ -1568,6 +1570,7 @@ const cancelDelete = () => {
   showDeleteConfirmation.value = false
   deleteConfirmationText.value = ''
   deleteError.value = null
+  hasLinkedModelsError.value = false
 }
 
 const confirmDelete = async () => {
@@ -1589,7 +1592,11 @@ const confirmDelete = async () => {
     const modelId = route.params.modelId as string
     const recordId = route.params.recordId as string
 
-    const response = await fetch(getApiUrl(`/v1/records/${modelId}/${recordId}`), {
+    // Add override parameter if this is a retry after linked models error
+    const overrideParam = hasLinkedModelsError.value ? '?overrideLinkedModelsError=true' : ''
+    const url = getApiUrl(`/v1/records/${modelId}/${recordId}${overrideParam}`)
+
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: getAuthHeaders(token)
     })
@@ -1606,6 +1613,10 @@ const confirmDelete = async () => {
         try {
           const errorData = await response.json()
           if (errorData.showMessageToUser && errorData.message) {
+            // Check if this is a RECORD_LINKED_TO_MODELS error
+            if (errorData.errorCode === 'RECORD_LINKED_TO_MODELS') {
+              hasLinkedModelsError.value = true
+            }
             throw new Error(errorData.message)
           }
         } catch (parseError) {
