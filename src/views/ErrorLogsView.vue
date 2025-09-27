@@ -152,11 +152,6 @@
         </div>
       </div>
 
-      <div class="back-section">
-        <button @click="goBack" class="back-btn">
-          Back to Home
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -264,10 +259,6 @@ const goToLastPage = () => {
 
 const changePageSize = () => {
   fetchErrorLogs(0, pageSize.value)
-}
-
-const goBack = () => {
-  router.push('/home')
 }
 
 // Error detail functions
@@ -614,33 +605,6 @@ onMounted(() => {
   .message {
     max-width: 250px;
   }
-}
-
-.back-section {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
-.back-btn {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
-}
-
-.back-btn:hover {
-  background-color: #545b62;
-  transform: translateY(-1px);
-}
-
-.back-btn:active {
-  transform: translateY(0);
 }
 
 /* Error Detail Styles */
