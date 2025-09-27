@@ -319,6 +319,13 @@ export interface ErrorDto {
   message: string
 }
 
+export interface ErrorDetailDto {
+  errorIdentifier: string
+  timestamp: string
+  message: string
+  stackTrace: string
+}
+
 export interface ErrorPagingInfo {
   currentPage: number
   pageSize: number

@@ -20,13 +20,57 @@
         <p>No error logs found.</p>
       </div>
 
-      <div v-else class="logs-table-container">
+      <!-- Error Detail View -->
+      <div v-if="showErrorDetail" class="error-detail-container">
+        <div class="error-detail-content">
+          <div class="error-detail-header">
+            <h3>Error Details</h3>
+            <button @click="closeErrorDetail" class="close-detail-btn">
+              Close
+            </button>
+          </div>
+
+          <div v-if="loadingDetail" class="loading-detail">
+            <p>Loading error details...</p>
+          </div>
+
+          <div v-else-if="detailError" class="error-message">
+            <p>Error loading details: {{ detailError }}</p>
+            <button @click="retryLoadDetail" class="retry-btn">Retry</button>
+          </div>
+
+          <div v-else-if="errorDetail" class="error-detail-body">
+            <div class="detail-section">
+              <h4>Error ID</h4>
+              <p class="error-id-detail">{{ errorDetail.errorIdentifier }}</p>
+            </div>
+
+            <div class="detail-section">
+              <h4>Timestamp</h4>
+              <p class="timestamp-detail">{{ formatTimestamp(errorDetail.timestamp) }}</p>
+            </div>
+
+            <div class="detail-section">
+              <h4>Message</h4>
+              <p class="message-detail">{{ errorDetail.message }}</p>
+            </div>
+
+            <div class="detail-section">
+              <h4>Stack Trace</h4>
+              <pre class="stack-trace">{{ errorDetail.stackTrace }}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="errorLogs.length > 0" class="logs-table-container">
         <table class="logs-table">
           <thead>
             <tr>
               <th>Error ID</th>
               <th>Timestamp</th>
               <th>Message</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -34,6 +78,15 @@
               <td class="error-id">{{ errorLog.errorIdentifier }}</td>
               <td class="timestamp">{{ formatTimestamp(errorLog.timestamp) }}</td>
               <td class="message">{{ errorLog.message }}</td>
+              <td class="actions">
+                <button
+                  @click="viewErrorDetail(errorLog.errorIdentifier)"
+                  class="view-btn"
+                  :disabled="loadingDetail"
+                >
+                  View
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -113,7 +166,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getApiUrl, getAuthHeaders } from '@/config/api'
-import type { ErrorDto, ErrorPagingInfo, GetErrorsResponse } from '@/types/models'
+import type { ErrorDto, ErrorDetailDto, ErrorPagingInfo, GetErrorsResponse } from '@/types/models'
 import AppNavigation from '@/components/AppNavigation.vue'
 import PageHeader from '@/components/PageHeader.vue'
 
@@ -126,6 +179,13 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const currentPage = ref(0)
 const pageSize = ref(5)
+
+// Error detail state
+const showErrorDetail = ref(false)
+const errorDetail = ref<ErrorDetailDto | null>(null)
+const loadingDetail = ref(false)
+const detailError = ref<string | null>(null)
+const currentErrorId = ref<string | null>(null)
 
 const fetchErrorLogs = async (page = 0, size = pageSize.value) => {
   loading.value = true
@@ -208,6 +268,59 @@ const changePageSize = () => {
 
 const goBack = () => {
   router.push('/home')
+}
+
+// Error detail functions
+const viewErrorDetail = async (errorIdentifier: string) => {
+  currentErrorId.value = errorIdentifier
+  showErrorDetail.value = true
+  loadingDetail.value = true
+  detailError.value = null
+  errorDetail.value = null
+
+  try {
+    const token = authStore.getAuthToken()
+
+    if (!token) {
+      router.push('/')
+      return
+    }
+
+    const response = await fetch(getApiUrl(`/admin/error/${errorIdentifier}`), {
+      method: 'GET',
+      headers: getAuthHeaders(token)
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        authStore.logout()
+        router.push('/')
+        return
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data: ErrorDetailDto = await response.json()
+    errorDetail.value = data
+  } catch (err) {
+    detailError.value = err instanceof Error ? err.message : 'Failed to fetch error details'
+    console.error('Error fetching error details:', err)
+  } finally {
+    loadingDetail.value = false
+  }
+}
+
+const closeErrorDetail = () => {
+  showErrorDetail.value = false
+  errorDetail.value = null
+  detailError.value = null
+  currentErrorId.value = null
+}
+
+const retryLoadDetail = () => {
+  if (currentErrorId.value) {
+    viewErrorDetail(currentErrorId.value)
+  }
 }
 
 onMounted(() => {
@@ -359,6 +472,40 @@ onMounted(() => {
   word-wrap: break-word;
 }
 
+.actions {
+  text-align: center;
+  white-space: nowrap;
+  width: 100px;
+}
+
+.view-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.view-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.view-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.view-btn:active {
+  transform: translateY(0);
+}
+
 .pagination-container {
   background-color: #f8f9fa;
   padding: 1.5rem;
@@ -494,5 +641,160 @@ onMounted(() => {
 
 .back-btn:active {
   transform: translateY(0);
+}
+
+/* Error Detail Styles */
+.error-detail-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.error-detail-content {
+  padding: 2rem;
+}
+
+.error-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.error-detail-header h3 {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-detail-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.close-detail-btn:hover {
+  background-color: #545b62;
+  transform: translateY(-1px);
+}
+
+.close-detail-btn:active {
+  transform: translateY(0);
+}
+
+.loading-detail {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.error-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.detail-section {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.detail-section h4 {
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.error-id-detail {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #6c757d;
+  word-break: break-all;
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  margin: 0;
+}
+
+.timestamp-detail {
+  color: #495057;
+  font-weight: 500;
+  font-size: 0.95rem;
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  margin: 0;
+}
+
+.message-detail {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  margin: 0;
+  word-wrap: break-word;
+}
+
+.stack-trace {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #495057;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .error-detail-content {
+    padding: 1rem;
+  }
+
+  .error-detail-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .close-detail-btn {
+    align-self: center;
+    min-width: 120px;
+  }
+
+  .stack-trace {
+    font-size: 0.8rem;
+    max-height: 300px;
+  }
 }
 </style>
