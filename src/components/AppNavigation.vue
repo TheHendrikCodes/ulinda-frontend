@@ -72,6 +72,13 @@
           >
             Performance
           </router-link>
+          <router-link
+            to="/admin/security-settings"
+            class="dropdown-item"
+            :class="{ active: currentPage === 'admin/security-settings' }"
+          >
+            Security Settings
+          </router-link>
         </div>
       </div>
     </div>
@@ -105,6 +112,7 @@ const currentPage = computed(() => {
   if (path === '/admin/logs') return 'admin/logs'
   if (path === '/admin/error-logs') return 'admin/error-logs'
   if (path === '/admin/performance') return 'admin/performance'
+  if (path === '/admin/security-settings') return 'admin/security-settings'
   return 'home'
 })
 

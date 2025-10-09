@@ -60,6 +60,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/admin/security-settings',
+      name: 'security-settings',
+      component: () => import('../views/SecuritySettingsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/admin/models',
       name: 'models-admin',
       component: () => import('../views/ModelsAdminView.vue'),
